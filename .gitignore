@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.env
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+data/*.db
+data/*.db-wal
+data/*.db-shm
+video solution .mp4
+submission/
+outputs/personalized_messages.md
+*.bak
+

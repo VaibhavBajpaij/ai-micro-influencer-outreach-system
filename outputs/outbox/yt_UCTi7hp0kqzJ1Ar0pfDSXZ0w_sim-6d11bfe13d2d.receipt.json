@@ -1,0 +1,15 @@
+{
+  "receipt_id": "sim-6d11bfe13d2d",
+  "run_id": "run-84fc1cbe53",
+  "influencer_id": "yt_UCTi7hp0kqzJ1Ar0pfDSXZ0w",
+  "influencer_name": "The Technologist",
+  "to": "iamthetechnologist@gmail.com",
+  "from": "Alex Rivera <partnerships@voltflow.example>",
+  "reply_to": "partnerships@voltflow.example",
+  "list_unsubscribe": "<mailto:partnerships@voltflow.example?subject=Unsubscribe>",
+  "subject": "Paid gear feature with VoltFlow for The Technologist",
+  "word_count": 66,
+  "collaboration_angle": "Paid product placement",
+  "dispatched_at": "2026-11-12T14:42:04.214851+00:00",
+  "mode": "simulated"
+}

@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VoltFlow · Automated Micro-Influencer Outreach System</title>
+  <link rel="icon" href="data:," />
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --surface: #121826;
+      --surface-2: #182133;
+      --border: #243047;
+      --text: #e6edf7;
+      --muted: #93a4bf;
+      --accent: #38bdf8;
+      --accent-2: #6366f1;
+      --pass: #22c55e;
+      --pass-bg: rgba(34, 197, 94, 0.12);
+      --fail: #f87171;
+      --fail-bg: rgba(248, 113, 113, 0.12);
+      --warn: #fbbf24;
+      --warn-bg: rgba(251, 191, 36, 0.12);
+      --radius: 12px;
+      --font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: radial-gradient(circle at top right, #141d31, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .container { max-width: 1320px; margin: 0 auto; padding: 24px 20px 64px; }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 22px;
+    }
+
+    .brand-title { display: flex; flex-direction: column; gap: 4px; }
+    .brand-title h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; }
+    .brand-title p { color: var(--muted); font-size: 0.875rem; }
+
+    .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+
+    select, input[type="text"], input[type="number"] {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.875rem;
+      outline: none;
+    }
+    select:focus, input:focus { border-color: var(--accent); }
+
+    button {
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.08s ease, opacity 0.15s ease, background 0.15s ease;
+    }
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #07101f;
+    }
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--text);
+      border-color: var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--accent); }
+    .btn-sm { padding: 5px 10px; font-size: 0.78rem; }
+
+    .status-banner {
+      display: none;
+      margin-bottom: 18px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--accent);
+      font-size: 0.86rem;
+      color: var(--text);
+    }
+    .status-banner.visible { display: flex; justify-content: space-between; align-items: center; }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .kpi-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .kpi-value { font-size: 1.7rem; font-weight: 700; margin-top: 4px; }
+    .kpi-sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+    }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .filter-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill-btn {
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 0.8rem;
+    }
+    .pill-btn.active { background: rgba(56, 189, 248, 0.14); color: var(--accent); border-color: var(--accent); }
+
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow-x: auto;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { padding: 11px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.04em; background: rgba(255,255,255,0.02); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge-pass { background: var(--pass-bg); color: var(--pass); }
+    .badge-fail { background: var(--fail-bg); color: var(--fail); }
+    .badge-warn { background: var(--warn-bg); color: var(--warn); }
+    .badge-info { background: rgba(56, 189, 248, 0.13); color: var(--accent); }
+
+    .mono { font-family: var(--mono); font-size: 0.79rem; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .reasons-list { margin-top: 6px; font-size: 0.78rem; color: var(--muted); display: flex; flex-direction: column; gap: 2px; }
+    .reason-pass { color: #86efac; }
+    .reason-fail { color: #fca5a5; }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: 16px;
+    }
+    .msg-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .msg-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .msg-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.86rem;
+      color: #dbe6f5;
+    }
+    .msg-meta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.77rem; color: var(--muted); }
+    .signals-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .signal-chip {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-size: 0.73rem;
+      color: var(--muted);
+    }
+
+    .section-title { font-size: 1rem; font-weight: 600; margin: 20px 0 10px; }
+    .empty-state { padding: 36px; text-align: center; color: var(--muted); }
+
+    @media (max-width: 720px) {
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand-title">
+        <h1>Automated Micro-Influencer Outreach System</h1>
+        <p id="header-subtitle">Discovery → Filtering → Enrichment → AI Personalization → Review → Sending → Tracker</p>
+      </div>
+      <div class="controls">
+        <input id="api-key-input" type="password" placeholder="Enter OUTREACH_API_KEY" aria-label="API authentication key" style="width: 185px;" />
+        <button id="unlock-btn" class="btn-secondary btn-sm" title="Load dashboard data with API key">Unlock / Load</button>
+        <select id="niche-select" aria-label="Niche preset">
+          <option value="technology">Technology &amp; AI Gadgets</option>
+          <option value="fashion_beauty">Fashion &amp; Beauty</option>
+          <option value="fitness">Fitness &amp; Wellness</option>
+          <option value="fintech">Fintech &amp; Personal Finance</option>
+        </select>
+        <input id="count-input" type="number" min="1" max="200" value="85" style="width: 82px;" title="Target discovery count (1-200)" />
+        <button id="run-btn" class="btn-primary">Discover &amp; Personalize</button>
+        <button id="send-all-btn" class="btn-secondary">Dispatch Emails (Simulate)</button>
+      </div>
+    </header>
+
+    <div id="status-banner" class="status-banner">
+      <span id="status-text">Ready</span>
+      <span id="llm-badge" class="badge badge-info">LLM: checking...</span>
+    </div>
+
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Discovered Creators</div>
+        <div class="kpi-value" id="kpi-discovered">0</div>
+        <div class="kpi-sub">Requirement: ≥ 50 profiles</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Qualified Micro</div>
+        <div class="kpi-value" id="kpi-qualified" style="color: var(--pass);">0</div>
+        <div class="kpi-sub" id="kpi-rejected-sub">0 rejected with audit reasons</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Outreach-Ready Emails</div>
+        <div class="kpi-value" id="kpi-emails">0</div>
+        <div class="kpi-sub" id="kpi-qual-emails-sub">0 total public emails discovered</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Personalized Pitches</div>
+        <div class="kpi-value" id="kpi-messages">0</div>
+        <div class="kpi-sub">Email (60-90w) + IG DM (15-30w)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Outreach Dispatched</div>
+        <div class="kpi-value" id="kpi-sent">0</div>
+        <div class="kpi-sub" id="kpi-dm-sub">0 DMs queued / sent</div>
+      </div>
+    </section>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="tab-influencers">1. Discovery &amp; Filter Audit</button>
+      <button class="tab-btn" data-tab="tab-messages">2. Personalized Messages (Email &amp; IG DM)</button>
+      <button class="tab-btn" data-tab="tab-tracker">3. Outreach Tracker &amp; IG DM Queue</button>
+    </nav>
+
+    <section id="tab-influencers" class="panel active">
+      <div class="toolbar">
+        <div class="filter-pills">
+          <button class="pill-btn active" data-status="">All (<span id="cnt-all">0</span>)</button>
+          <button class="pill-btn" data-status="Qualified">Qualified (<span id="cnt-qual">0</span>)</button>
+          <button class="pill-btn" data-status="Rejected">Rejected (<span id="cnt-rej">0</span>)</button>
+        </div>
+        <input id="search-input" type="text" placeholder="Search name, platform, theme, email, tier..." style="min-width: 280px;" />
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Influencer</th>
+              <th>Platform &amp; Geo</th>
+              <th>Followers</th>
+              <th>Engagement</th>
+              <th>Email &amp; Socials</th>
+              <th>Themes &amp; Tone</th>
+              <th>Status &amp; Filter Audit</th>
+            </tr>
+          </thead>
+          <tbody id="influencers-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="tab-messages" class="panel">
+      <div class="toolbar">
+        <div style="color: var(--muted); font-size: 0.875rem;">
+          Every shortlisted creator receives a tailored <strong>60–90 word Email Pitch</strong> and <strong>15–30 word Instagram DM</strong> referencing real recent content.
+        </div>
+        <button id="regen-btn" class="btn-secondary btn-sm">Regenerate All Messages</button>
+      </div>
+      <div id="messages-grid" class="cards-grid"></div>
+    </section>
+
+    <section id="tab-tracker" class="panel">
+      <div class="toolbar" style="margin-top: 8px;">
+        <h3 class="section-title" style="margin: 0;">Email Outreach Tracker (Run-Scoped with Atomic Duplicate Prevention)</h3>
+        <select id="tracker-scope-select" aria-label="Tracker scope">
+          <option value="current">Current Run Only</option>
+          <option value="all">All Historical Runs</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Run ID</th>
+              <th>Influencer</th>
+              <th>Email</th>
+              <th>Message Generated</th>
+              <th>Sent</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Notes / Receipt</th>
+            </tr>
+          </thead>
+          <tbody id="tracker-tbody"></tbody>
+        </table>
+      </div>
+
+      <h3 class="section-title">Instagram DM Manual / Simulated Queue (Compliant Workflow)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Influencer</th>
+              <th>Instagram Profile</th>
+              <th>Personalized DM (15–30w)</th>
+              <th>Words</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="dm-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const state = {
+      statusFilter: "",
+      searchQuery: "",
+      trackerScope: "current",
+      currentRunId: "",
+      influencers: [],
+      messages: [],
+      outreachLog: [],
+      dmQueue: [],
+    };
+
+    function escapeHtml(val) {
+      return String(val ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function fmtNum(n) {
+      if (n === null || n === undefined) return "N/A";
+      return Number(n).toLocaleString();
+    }
+
+    function showBanner(msg) {
+      const el = document.getElementById("status-banner");
+      document.getElementById("status-text").textContent = msg;
+      el.classList.add("visible");
+    }
+
+    function getApiKey() {
+      return (document.getElementById("api-key-input").value || "").trim();
+    }
+
+    const savedKey = sessionStorage.getItem("outreach_api_key");
+    if (savedKey) {
+      document.getElementById("api-key-input").value = savedKey;
+    }
+    document.getElementById("api-key-input").addEventListener("input", (e) => {
+      sessionStorage.setItem("outreach_api_key", e.target.value);
+    });
+
+    async function apiJson(url, options = {}) {
+      const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+      const key = getApiKey();
+      if (key) {
+        headers["X-API-Key"] = key;
+      }
+      const resp = await fetch(url, { ...options, headers });
+      if (!resp.ok) {
+        const text = await resp.text();
+        throw new Error(text || `HTTP ${resp.status}`);
+      }
+      return resp.json();
+    }
+
+    async function refreshAll() {
+      const key = getApiKey();
+      if (!key) {
+        try {
+          const health = await apiJson("/api/health");
+          document.getElementById("llm-badge").textContent =
+            `${health.generation_mode || "contextual_fallback"} (${health.llm_provider} / ${health.llm_model})`;
+          showBanner(
+            health.auth_configured
+              ? "Enter your OUTREACH_API_KEY above and click Unlock / Load to view creator data."
+              : "Server API key is not configured (set OUTREACH_API_KEY in .env)."
+          );
+        } catch (err) {
+          showBanner("Health check failed: " + err.message);
+        }
+        return;
+      }
+
+      const logUrl = state.trackerScope === "all"
+        ? "/api/outreach-log?current_only=false"
+        : "/api/outreach-log?current_only=true";
+
+      const [summary, influencers, messages, log, dms] = await Promise.all([
+        apiJson("/api/summary"),
+        apiJson("/api/influencers"),
+        apiJson("/api/messages"),
+        apiJson(logUrl),
+        apiJson("/api/dm-queue"),
+      ]);
+      state.currentRunId = summary.current_run_id || "";
+      state.influencers = influencers;
+      state.messages = messages;
+      state.outreachLog = log;
+      state.dmQueue = dms;
+
+      document.getElementById("kpi-discovered").textContent = summary.discovered_count;
+      document.getElementById("kpi-qualified").textContent = summary.qualified_count;
+      document.getElementById("kpi-rejected-sub").textContent = `${summary.rejected_count} rejected with audit reasons`;
+      document.getElementById("kpi-emails").textContent = summary.outreach_ready_count;
+      document.getElementById("kpi-qual-emails-sub").textContent =
+        `${summary.emails_found_count} total discovered · ${summary.qualified_missing_email_count} qualified DM-only`;
+      document.getElementById("kpi-messages").textContent = summary.messages_generated_count;
+      document.getElementById("kpi-sent").textContent = summary.emails_sent_count;
+      document.getElementById("kpi-dm-sub").textContent =
+        `${summary.emails_skipped_no_email} no-email · ${summary.emails_skipped_duplicate} dup · ${summary.dm_sent_count} DMs sent / ${summary.dm_skipped_no_handle ?? 0} skipped`;
+
+      document.getElementById("cnt-all").textContent = summary.discovered_count;
+      document.getElementById("cnt-qual").textContent = summary.qualified_count;
+      document.getElementById("cnt-rej").textContent = summary.rejected_count;
+
+      const llmBadge = document.getElementById("llm-badge");
+      llmBadge.textContent = `${summary.generation_mode || "contextual_fallback"} (${summary.llm_provider} / ${summary.llm_model}) · ${summary.messages_llm_count ?? 0} LLM / ${summary.messages_fallback_count ?? 0} fallback · mode=${summary.send_mode || "simulate"}`;
+      showBanner(
+        state.currentRunId
+          ? `Active Run: ${state.currentRunId} (run-scoped KPIs & tracker)`
+          : "Ready"
+      );
+
+      renderInfluencers();
+      renderMessages();
+      renderTracker();
+      renderDms();
+    }
+
+    function renderInfluencers() {
+      const tbody = document.getElementById("influencers-tbody");
+      const q = state.searchQuery.trim().toLowerCase();
+      const filtered = state.influencers.filter((p) => {
+        if (state.statusFilter && p.status !== state.statusFilter) return false;
+        if (!q) return true;
+        const hay = `${p.name} ${p.platform} ${p.contact_email} ${p.tier} ${(p.content_themes || []).join(" ")}`.toLowerCase();
+        return hay.includes(q);
+      });
+
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No influencer records match the current filter. Click "Discover & Personalize" above to run discovery.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((p) => {
+        const isPass = p.status === "Qualified";
+        const badge = isPass
+          ? `<span class="badge badge-pass">PASS · ${escapeHtml(p.tier)}</span>`
+          : `<span class="badge badge-fail">FAIL · ${escapeHtml(p.tier)}</span>`;
+        const emailBadge = p.contact_email && p.contact_email !== "Not Found"
+          ? `<span class="mono" style="color:#86efac;">${escapeHtml(p.contact_email)}</span>`
+          : `<span class="badge badge-warn">Not Found</span>`;
+
+        const socials = [];
+        if (p.instagram_url && p.instagram_url !== "Not Found") {
+          socials.push(`<a href="${escapeHtml(p.instagram_url)}" target="_blank" rel="noopener">IG</a>`);
+        }
+        if (p.website && p.website !== "Not Found") {
+          socials.push(`<a href="${escapeHtml(p.website)}" target="_blank" rel="noopener">Web</a>`);
+        }
+
+        const recentTitle = p.recent_content && p.recent_content.length ? p.recent_content[0].title : "N/A";
+        const passList = (p.passed_criteria || []).slice(0, 3).map(r => `<div class="reason-pass">✓ ${escapeHtml(r)}</div>`).join("");
+        const failList = (p.failed_criteria || []).map(r => `<div class="reason-fail">✕ ${escapeHtml(r)}</div>`).join("");
+
+        return `
+          <tr>
+            <td>
+              <div><a href="${escapeHtml(p.profile_url)}" target="_blank" rel="noopener"><strong>${escapeHtml(p.name)}</strong></a></div>
+              <div class="mono" style="color:var(--muted);">${escapeHtml(p.handle || p.id)}</div>
+            </td>
+            <td>
+              <div><span class="badge badge-info">${escapeHtml(p.platform)}</span></div>
+              <div style="font-size:0.78rem; color:var(--muted); margin-top:4px;">${escapeHtml(p.audience_geography)}</div>
+            </td>
+            <td class="mono">${p.followers !== null && p.followers !== undefined ? fmtNum(p.followers) : "Unavailable"}</td>
+            <td class="mono">
+              <div>${p.engagement_rate !== null && p.engagement_rate !== undefined ? p.engagement_rate.toFixed(2) + "%" : "Unavailable"}</div>
+              <div style="font-size:0.72rem; color:var(--muted);">Avg views: ${fmtNum(p.avg_views)}</div>
+            </td>
+            <td>
+              <div>${emailBadge}</div>
+              <div style="font-size:0.73rem; color:var(--muted); margin-top:3px;">${escapeHtml(p.outreach_readiness || "")}</div>
+              <div style="font-size:0.76rem; color:var(--muted); margin-top:3px;">${socials.join(" · ") || "No extra links"}</div>
+            </td>
+            <td>
+              <div style="font-size:0.8rem;">${escapeHtml((p.content_themes || []).join(", "))}</div>
+              <div style="font-size:0.74rem; color:var(--muted); margin-top:3px;">Latest: ${escapeHtml(recentTitle.slice(0, 58))}</div>
+            </td>
+            <td>
+              <div>${badge} <span class="mono" style="color:var(--muted);">${p.filter_score}/100</span></div>
+              <div class="reasons-list">${failList}${passList}</div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderMessages() {
+      const grid = document.getElementById("messages-grid");
+      if (!state.messages.length) {
+        grid.innerHTML = `<div class="empty-state">No personalized messages generated yet.</div>`;
+        return;
+      }
+
+      grid.innerHTML = state.messages.map((m) => {
+        const emailStatus = m.contact_email !== "Not Found"
+          ? `<span class="badge badge-pass">${escapeHtml(m.contact_email)}</span>`
+          : `<span class="badge badge-warn">Email: Not Found (DM Ready)</span>`;
+        const emailWordOk = m.email_word_count >= 60 && m.email_word_count <= 90;
+        const dmWordOk = m.dm_word_count >= 15 && m.dm_word_count <= 30;
+        const signals = (m.personalization_signals_used || []).map(s => `<span class="signal-chip">${escapeHtml(s)}</span>`).join("");
+
+        return `
+          <article class="msg-card">
+            <div class="msg-header">
+              <div>
+                <h3 style="font-size:1rem;">${escapeHtml(m.influencer_name)}</h3>
+                <div style="font-size:0.78rem; color:var(--muted);">${escapeHtml(m.platform)} · Angle: <strong>${escapeHtml(m.collaboration_angle)}</strong></div>
+              </div>
+              ${emailStatus}
+            </div>
+            <div>
+              <div class="msg-meta-row">
+                <span>Subject: <strong>${escapeHtml(m.email_subject)}</strong></span>
+                <span class="badge ${emailWordOk ? "badge-pass" : "badge-fail"}">${m.email_word_count} words</span>
+              </div>
+              <div class="msg-box">${escapeHtml(m.email_pitch)}</div>
+            </div>
+            <div>
+              <div class="msg-meta-row">
+                <span>Instagram DM (${m.instagram_url !== "Not Found" ? escapeHtml(m.instagram_url) : "Manual handle lookup"})</span>
+                <span class="badge ${dmWordOk ? "badge-pass" : "badge-fail"}">${m.dm_word_count} words</span>
+              </div>
+              <div class="msg-box">${escapeHtml(m.instagram_dm)}</div>
+            </div>
+            <div class="signals-row">${signals}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; gap:8px;">
+              <span class="mono" style="color:var(--muted); font-size:0.72rem;">${escapeHtml(m.generation_mode || "contextual_fallback")} · ${escapeHtml(m.llm_provider)} / ${escapeHtml(m.llm_model)}</span>
+              <div style="display:flex; gap:8px;">
+                <button class="btn-secondary btn-sm" data-action="copy-msg" data-id="${escapeHtml(m.influencer_id)}">Copy DM</button>
+                <button class="btn-primary btn-sm" data-action="send-email" data-id="${escapeHtml(m.influencer_id)}">Simulate Email Send</button>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderTracker() {
+      const tbody = document.getElementById("tracker-tbody");
+      if (!state.outreachLog.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No outreach dispatches logged for this view yet.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = state.outreachLog.map((r) => {
+        const cls = r.sent ? "badge-pass" : (r.status.includes("Duplicate") || r.status.includes("No Email") || r.status.includes("Verify") || r.status.includes("Verification") ? "badge-warn" : "badge-fail");
+        const verifyActions = r.status === "Verify Delivery - Uncertain SMTP"
+          ? `<div style="margin-top:6px; display:flex; gap:6px;">
+              <button class="btn-primary btn-sm" data-action="verify-smtp-sent" data-id="${r.id}">Confirm Sent</button>
+              <button class="btn-secondary btn-sm" data-action="verify-smtp-not-sent" data-id="${r.id}">Confirm Failed</button>
+             </div>`
+          : "";
+        return `
+          <tr>
+            <td class="mono" style="color:var(--muted);">${escapeHtml(r.run_id || "-")}</td>
+            <td><strong>${escapeHtml(r.influencer_name)}</strong></td>
+            <td class="mono">${escapeHtml(r.email)}</td>
+            <td>${r.message_generated ? "Yes" : "No"}</td>
+            <td>${r.sent ? "Yes" : "No"}</td>
+            <td class="mono">${escapeHtml(r.sent_date ? r.sent_date.slice(0, 19).replace("T", " ") : "-")}</td>
+            <td><span class="badge ${cls}">${escapeHtml(r.status)}</span></td>
+            <td style="font-size:0.78rem; color:var(--muted);">${escapeHtml(r.notes)} ${r.receipt_id ? `(${escapeHtml(r.receipt_id)})` : ""}${verifyActions}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderDms() {
+      const tbody = document.getElementById("dm-tbody");
+      if (!state.dmQueue.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No Instagram DMs queued yet.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = state.dmQueue.map((d) => {
+        const cls = d.sent ? "badge-pass" : "badge-warn";
+        const hasIg = d.instagram_url && d.instagram_url !== "Not Found" && d.status !== "Skipped - No Instagram Handle";
+        const igCell = hasIg
+          ? `<a href="${escapeHtml(d.instagram_url)}" target="_blank" rel="noopener">${escapeHtml(d.instagram_url)}</a>`
+          : `<span style="color:var(--muted);">Not Found</span>`;
+        const disabledAttr = hasIg ? "" : ' disabled title="No public Instagram handle found"';
+        return `
+          <tr>
+            <td><strong>${escapeHtml(d.influencer_name)}</strong></td>
+            <td style="font-size:0.8rem;">${igCell}</td>
+            <td style="font-size:0.82rem; max-width:420px;">${escapeHtml(d.instagram_dm)}</td>
+            <td class="mono">${d.dm_word_count}w</td>
+            <td><span class="badge ${cls}">${escapeHtml(d.status)}</span></td>
+            <td style="white-space:nowrap;">
+              <button class="btn-secondary btn-sm" data-action="copy-dm" data-id="${escapeHtml(d.influencer_id)}">Copy</button>
+              <button class="btn-secondary btn-sm" data-action="sim-dm" data-id="${escapeHtml(d.influencer_id)}"${disabledAttr}>Simulate</button>
+              <button class="btn-primary btn-sm" data-action="mark-dm" data-id="${escapeHtml(d.influencer_id)}"${disabledAttr}>Mark Sent</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        showBanner("Copied personalized message to clipboard.");
+      } catch {
+        showBanner("Copy ready: " + text);
+      }
+    }
+
+    async function sendSingleEmail(influencerId) {
+      showBanner(`Dispatching email for ${influencerId}...`);
+      try {
+        const res = await apiJson("/api/outreach/send", {
+          method: "POST",
+          body: JSON.stringify({ mode: "simulate", influencer_ids: [influencerId] }),
+        });
+        const entry = res.entries[0];
+        showBanner(`Outreach result for ${entry.influencer_name}: ${entry.status} (${entry.notes})`);
+        await refreshAll();
+      } catch (err) {
+        showBanner("Send error (check API Key): " + err.message);
+      }
+    }
+
+    async function simulateDm(influencerId) {
+      try {
+        const entry = await apiJson(`/api/dm/${encodeURIComponent(influencerId)}/simulate`, { method: "POST" });
+        showBanner(`Instagram DM updated for ${entry.influencer_name}: ${entry.status}`);
+        await refreshAll();
+      } catch (err) {
+        showBanner("DM error (check API Key): " + err.message);
+      }
+    }
+
+    async function markDmSent(influencerId) {
+      try {
+        const entry = await apiJson(`/api/dm/${encodeURIComponent(influencerId)}/mark-sent`, { method: "POST" });
+        showBanner(`Instagram DM updated for ${entry.influencer_name}: ${entry.status}`);
+        await refreshAll();
+      } catch (err) {
+        showBanner("DM error (check API Key): " + err.message);
+      }
+    }
+
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(btn.dataset.tab).classList.add("active");
+      });
+    });
+
+    document.querySelectorAll(".pill-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".pill-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        state.statusFilter = btn.dataset.status;
+        renderInfluencers();
+      });
+    });
+
+    document.getElementById("search-input").addEventListener("input", (e) => {
+      state.searchQuery = e.target.value;
+      renderInfluencers();
+    });
+
+    document.getElementById("run-btn").addEventListener("click", async () => {
+      const btn = document.getElementById("run-btn");
+      btn.disabled = true;
+      showBanner("Running live discovery, filtering, enrichment, and personalization (this takes ~10-20s)...");
+      try {
+        const res = await apiJson("/api/pipeline/run", {
+          method: "POST",
+          body: JSON.stringify({
+            niche: document.getElementById("niche-select").value,
+            target_count: Number(document.getElementById("count-input").value) || 65,
+            auto_send: false,
+          }),
+        });
+        showBanner(`Completed: discovered ${res.discovered_count} creators, qualified ${res.qualified_count}, generated ${res.messages_generated_count} message pairs.`);
+        await refreshAll();
+      } catch (err) {
+        showBanner("Pipeline error: " + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById("regen-btn").addEventListener("click", async () => {
+      showBanner("Regenerating personalized Email & IG DM drafts...");
+      try {
+        const res = await apiJson("/api/personalize/regenerate", { method: "POST" });
+        showBanner(`Regenerated ${res.messages_generated_count} personalized message pairs.`);
+        await refreshAll();
+      } catch (err) {
+        showBanner("Regenerate error (check API Key): " + err.message);
+      }
+    });
+
+    document.getElementById("unlock-btn").addEventListener("click", () => {
+      refreshAll().catch((err) => showBanner("Authentication / load failed: " + err.message));
+    });
+
+    document.getElementById("api-key-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        refreshAll().catch((err) => showBanner("Authentication / load failed: " + err.message));
+      }
+    });
+
+    document.getElementById("tracker-scope-select").addEventListener("change", (e) => {
+      state.trackerScope = e.target.value;
+      refreshAll().catch((err) => showBanner("Failed loading tracker: " + err.message));
+    });
+
+    document.getElementById("messages-grid").addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-action]");
+      if (!btn) return;
+      const id = btn.dataset.id;
+      if (btn.dataset.action === "copy-msg") {
+        const msg = state.messages.find((m) => m.influencer_id === id);
+        if (msg) copyText(msg.instagram_dm);
+      } else if (btn.dataset.action === "send-email") {
+        sendSingleEmail(id);
+      }
+    });
+
+    document.getElementById("tracker-tbody").addEventListener("click", async (e) => {
+      const btn = e.target.closest("button[data-action]");
+      if (!btn) return;
+      const logId = btn.dataset.id;
+      const delivered = btn.dataset.action === "verify-smtp-sent";
+      try {
+        const res = await apiJson(`/api/outreach/${encodeURIComponent(logId)}/verify-smtp`, {
+          method: "POST",
+          body: JSON.stringify({
+            delivered,
+            notes: delivered
+              ? "Operator confirmed delivery via dashboard."
+              : "Operator confirmed not sent; unlocked for retry.",
+          }),
+        });
+        showBanner(`Verification recorded for ${res.influencer_name}: ${res.status}`);
+        await refreshAll();
+      } catch (err) {
+        showBanner("Verification error (check API Key): " + err.message);
+      }
+    });
+
+    document.getElementById("dm-tbody").addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-action]");
+      if (!btn) return;
+      const id = btn.dataset.id;
+      if (btn.dataset.action === "copy-dm") {
+        const dm = state.dmQueue.find((d) => d.influencer_id === id);
+        if (dm) copyText(dm.instagram_dm);
+      } else if (btn.dataset.action === "sim-dm") {
+        simulateDm(id);
+      } else if (btn.dataset.action === "mark-dm") {
+        markDmSent(id);
+      }
+    });
+
+    document.getElementById("send-all-btn").addEventListener("click", async () => {
+      const ok = window.confirm(
+        "Simulate dispatching outreach emails for all eligible current-run qualified creators? (Mode is pinned to simulate; duplicates are skipped.)"
+      );
+      if (!ok) return;
+      showBanner("Running bulk email outreach batch (safe simulate mode with duplicate prevention)...");
+      try {
+        const res = await apiJson("/api/outreach/send-bulk", {
+          method: "POST",
+          body: JSON.stringify({ mode: "simulate", confirm_bulk: true }),
+        });
+        showBanner(`Outreach batch complete: processed ${res.processed} shortlisted creators, ${res.sent} newly dispatched.`);
+        await refreshAll();
+      } catch (err) {
+        showBanner("Bulk send error (check API Key): " + err.message);
+      }
+    });
+
+    refreshAll().catch((err) => showBanner("Failed loading state: " + err.message));
+  </script>
+</body>
+</html>
