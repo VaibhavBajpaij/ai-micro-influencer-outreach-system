@@ -2,6 +2,10 @@
 
 An end-to-end automated pipeline, authenticated FastAPI review dashboard, and n8n automation workflow that discovers real micro-influencers (**50+ profiles** per run), evaluates them with transparent pass/fail filtering logic, enriches public contact and content context without fabricating unavailable data, generates personalized **Email Collaboration Pitches (60–90 words)** and **Instagram DMs (15–30 words)**, and simulates or dispatches outreach with atomic SQLite duplicate protection and run-scoped tracking.
 
+> **Walkthrough Demo Video (2m32s):** Click the preview below to play/download the full HD walkthrough ([docs/demo_video.mp4](docs/demo_video.mp4)).
+>
+> [![Watch Full Walkthrough Demo Video](docs/demo_preview.gif)](https://github.com/VaibhavBajpaij/ai-micro-influencer-outreach-system/blob/main/docs/demo_video.mp4)
+
 ```text
 YouTube + Bluesky ──▶ Async Discovery (90 real creators)
                           │
@@ -157,7 +161,10 @@ The exported workflow ([workflows/n8n_micro_influencer_outreach.json](workflows/
 
 ## 10. Working Demo Video & Dashboard Screenshots
 
-- **Full Walkthrough Video (2m32s):** [docs/demo_video.mp4](docs/demo_video.mp4)
+- **Full HD Walkthrough Video (2m32s):** [Watch / Download docs/demo_video.mp4](https://github.com/VaibhavBajpaij/ai-micro-influencer-outreach-system/blob/main/docs/demo_video.mp4) (`1918x930`, H.264/AAC)
+- **Direct Raw Video Link:** https://github.com/VaibhavBajpaij/ai-micro-influencer-outreach-system/raw/main/docs/demo_video.mp4
+
+[![Watch Full Walkthrough Demo Video](docs/demo_preview.gif)](https://github.com/VaibhavBajpaij/ai-micro-influencer-outreach-system/blob/main/docs/demo_video.mp4)
 
 ### Discovery, Filtering Audit & Outreach-Ready Separation
 ![Discovery & Filtering Audit](docs/screenshots/01_discovery_audit.png)
